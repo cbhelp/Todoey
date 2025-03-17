@@ -15,29 +15,40 @@ struct Todo: Identifiable {
 struct ContentView: View {
     // Replace with todos @State private vars
     @State private var todos: [Todo] = []
+    @State private var title: String = ""
+    @State private var showingSheet = false
+    @State private var backgroundColor: Color = .yellow
     var body: some View {
         ZStack{
-            LinearGradient(gradient: Gradient(colors: [.purple, .pink]), startPoint: .leading, endPoint: .trailing)
-                .ignoresSafeArea()
+//            LinearGradient(gradient: Gradient(colors: [.gray, .black]), startPoint: .leading, endPoint: .trailing)
+//                .ignoresSafeArea()
+            
+            Color.black.ignoresSafeArea()
             VStack(alignment: .leading){
-                Text("Todo List:")
-                    .font(.largeTitle)
-                    .bold()
-                    .foregroundColor(.white)
-                List {
-                    ForEach($todos) { $todo in
-                        //itemView(todo: $todo)
-                        HStack{
-                            Button{
-                                todo.isDone = !todo.isDone
-                            } label:{
-                                Image(systemName: todo.isDone ? "checkmark.circle.fill" : "circle")
-                            }
-                            TextField("Task:" , text: $todo.item)
-                        }
+                HStack{
+                    TextField("Title", text: $title, prompt: Text("New Note").foregroundColor(backgroundColor))
+                        .font(.largeTitle)
+                        .bold()
+                        .foregroundColor(backgroundColor)//.white)
+                    Button{
+                        showingSheet.toggle()
+                    }label:{
+                        Image(systemName: "i.circle.fill")
+                            .foregroundColor(backgroundColor)
+                    }
+                    .sheet(isPresented: $showingSheet){
+                        SheetView(pickedColor: $backgroundColor, pickedTitle: $title)
                     }
                 }
-                .listRowBackground(Color.clear)
+                List {
+                    ForEach($todos) { $todo in
+                        itemView(todo: $todo)
+                            .foregroundColor(backgroundColor)
+                    }
+                    .onDelete { offsets in
+                        todos.remove(atOffsets: offsets)
+                    }
+                }
                 .scrollContentBackground(.hidden)
                 Button{
                     todos.append(Todo(item: "", isDone: false))
@@ -47,7 +58,7 @@ struct ContentView: View {
                         Text("New Reminder")
                     }
                     .font(.title)
-                    .foregroundColor(.white)
+                    .foregroundColor(backgroundColor)//.white)
                 }
             }
             .padding()
@@ -55,7 +66,7 @@ struct ContentView: View {
     }
 }
 
-/*struct itemView: View {
+struct itemView: View {
     @Binding var todo: Todo
     var body: some View {
         HStack{
@@ -68,7 +79,57 @@ struct ContentView: View {
             TextField("Task:", text: $todo.item)
         }
     }
-}*/
+}
+
+struct SheetView: View {
+    @Environment(\.dismiss) var dismiss
+    @Binding var pickedColor: Color
+    @Binding var pickedTitle: String
+    let colors: [Color] = [.red, .blue, .green, .yellow, .purple, .pink, .brown]
+    var body: some View {
+        ZStack{
+            Color.black.ignoresSafeArea()
+            VStack{
+                Text("Pick A Color")
+                    .bold()
+                    .font(.largeTitle)
+                    .foregroundColor(pickedColor)
+                HStack{
+                    TextField("Title:", text: $pickedTitle)
+                    Image(systemName: "list.bullet.circle.fill")
+                }
+                .padding()
+                .font(.title)
+                .bold()
+                .foregroundColor(pickedColor)
+                HStack{
+                    ForEach(colors, id: \.self){color in
+                        Button{
+                            pickedColor = color
+                        }label:{
+                            Image(systemName: "list.bullet.circle.fill").resizable()
+                                .frame(width: 50, height: 50)
+                                .foregroundColor(color)
+                        }
+                    }
+                }
+                .padding()
+                Button{
+                    dismiss()
+                }label:{
+                    HStack{
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                    }
+                    .font(.largeTitle)
+                    .bold()
+                    .foregroundColor(pickedColor)
+                }
+            }
+            .padding()
+        }
+    }
+}
 
 #Preview {
     ContentView()
